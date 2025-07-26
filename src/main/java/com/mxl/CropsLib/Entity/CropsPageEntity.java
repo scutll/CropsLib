@@ -1,14 +1,14 @@
 package com.mxl.CropsLib.Entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "crops_page")
 public class CropsPageEntity {
 
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(name = "title")
@@ -64,14 +64,6 @@ public class CropsPageEntity {
         this.images = images;
     }
 
-    public int getImages_cnt() {
-        return images_cnt;
-    }
-
-    public void setImages_cnt(int images_cnt) {
-        this.images_cnt = images_cnt;
-    }
-
     public String getVideos() {
         return videos;
     }
@@ -80,11 +72,19 @@ public class CropsPageEntity {
         this.videos = videos;
     }
 
+    public int getImages_cnt() {
+        return images_cnt;
+    }
+
+    public void setImages_cnt(int imagesCnt) {
+        this.images_cnt = imagesCnt;
+    }
+
     public int getVideos_cnt() {
         return videos_cnt;
     }
 
-    public void setVideos_cnt(int videos_cnt) {
-        this.videos_cnt = videos_cnt;
+    public void setVideos_cnt(int videosCnt) {
+        this.videos_cnt = videosCnt;
     }
 }

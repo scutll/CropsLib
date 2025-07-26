@@ -1,25 +1,37 @@
 package com.mxl.CropsLib.Entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "images_of_crop")
 public class ImagesOfCropEntity {
 
     @Id
     @Column(name = "id")
     private long id;
 
-    @Column(name = "image_name")
-    private String image_name;
+    @Column(name = "imagename")
+    private String imagename;
 
+    @Lob
     @Column(name = "image_data")
     private byte[] image_data;
 
+    @Column(name = "belong")
+    private long belong;
 
 
     // getter and setters --------------------------------------------------------------------------------------
+
+
+    public long getBelong() {
+        return belong;
+    }
+
+    public void setBelong(long belong) {
+        this.belong = belong;
+    }
+
     public long getId() {
         return id;
     }
@@ -28,19 +40,19 @@ public class ImagesOfCropEntity {
         this.id = id;
     }
 
-    public String getImage_name() {
-        return image_name;
+    public String getImagename() {
+        return imagename;
     }
 
-    public void setImage_name(String image_name) {
-        this.image_name = image_name;
+    public void setImagename(String imageName) {
+        this.imagename = imageName;
     }
 
     public byte[] getImage_data() {
         return image_data;
     }
 
-    public void setImage_data(byte[] image_data) {
-        this.image_data = image_data;
+    public void setImage_data(byte[] imageData) {
+        this.image_data = imageData;
     }
 }

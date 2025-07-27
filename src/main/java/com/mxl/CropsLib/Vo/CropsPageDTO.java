@@ -44,7 +44,7 @@ public class CropsPageDTO {
         this.videosCnt = videosCnt;
     }
 
-    public static CropsPageDTO build(CropsPageEntity cropsPageEntity) {
+    public static CropsPageDTO ConvertIntoVo(CropsPageEntity cropsPageEntity) {
         CropsPageDTO cropsPageDTO = new CropsPageDTO();
         cropsPageDTO.setId(cropsPageEntity.getId());
         cropsPageDTO.setTitle(cropsPageEntity.getTitle());

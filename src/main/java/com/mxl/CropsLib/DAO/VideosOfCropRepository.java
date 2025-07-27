@@ -10,4 +10,6 @@ import java.util.List;
 public interface VideosOfCropRepository extends JpaRepository<VideosOfCropEntity, Long> {
 
     List<VideosOfCropEntity> findByVideoname(String videoname);
+
+    List<VideosOfCropEntity> findByBelongAndVideoname(long belong, String videoname);
 }

@@ -2,7 +2,7 @@ package com.mxl.CropsLib.Service;
 
 
 import com.mxl.CropsLib.Entity.CropsPageEntity;
-import com.mxl.CropsLib.Response.Response;
+import com.mxl.CropsLib.Vo.CropsPageDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,4 +17,21 @@ public interface CropsPageService {
     ResponseEntity<String> updateCropPageImage(long cropid, MultipartFile image) throws Exception;
 
     ResponseEntity<String> updateCropPageVideo(long cropid, MultipartFile video) throws Exception;
+
+    ResponseEntity<CropsPageDTO> getCropPageById(long cropid);
+
+    ResponseEntity<CropsPageDTO> getCropPageByTitle(String croptitle);
+
+    ResponseEntity<byte[]> getCropPageImageByIdAndName(long cropid, String imageName);
+
+
+    ResponseEntity<byte[]> getCropPageImageByTitleAndName(String croptitle, String imageName);
+
+    ResponseEntity<byte[]> getCropPageVideosByIdAndName(long cropid, String videoName);
+
+    ResponseEntity<byte[]> getCropPageVideosByTitleAndName(String croptitle, String videoName);
+
+    ResponseEntity<String> getCropPageDetailById(long cropid);
+
+    ResponseEntity<String> getCropPageDetailByTitle(String croptitle);
 }

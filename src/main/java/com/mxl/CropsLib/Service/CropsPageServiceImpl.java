@@ -9,10 +9,17 @@ import com.mxl.CropsLib.Entity.CropsPageEntity;
 import com.mxl.CropsLib.Entity.DetailOfCropEntity;
 import com.mxl.CropsLib.Entity.ImagesOfCropEntity;
 import com.mxl.CropsLib.Entity.VideosOfCropEntity;
+import com.mxl.CropsLib.Vo.CropsPageDTO;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.stylesheets.LinkStyle;
+
+import java.util.List;
 
 @Service
 public class CropsPageServiceImpl implements CropsPageService{
@@ -28,6 +35,18 @@ public class CropsPageServiceImpl implements CropsPageService{
 
     @Autowired
     private DetailsOfCropRepository detailsOfCropRepository;
+
+
+    private long getIdByTitle(String croptitle) throws EntityNotFoundException{
+        List<CropsPageEntity> cropsPageEntityList = cropsRepository.findByTitle(croptitle);
+        if(CollectionUtils.isEmpty(cropsPageEntityList))
+            throw new EntityNotFoundException("Crop not found with title: " + croptitle);
+        else if (cropsPageEntityList.size() > 1) {
+            throw new EntityNotFoundException("Multiple crops found with same title");
+        }
+        return cropsPageEntityList.get(0).getId();
+    }
+
 
 
     @Override
@@ -129,5 +148,124 @@ public class CropsPageServiceImpl implements CropsPageService{
         return ResponseEntity.ok("Video updated successfully: " + videoName);
     }
 
+    @Override
+    public ResponseEntity<CropsPageDTO> getCropPageById(long cropid) {
+        CropsPageEntity cropsPageEntity = cropsRepository.findById(cropid).orElseThrow(EntityNotFoundException::new);
+        return ResponseEntity.ok(CropsPageDTO.ConvertIntoVo(cropsPageEntity));
+    }
+
+    @Override
+    public ResponseEntity<CropsPageDTO> getCropPageByTitle(String croptitle) {
+        List<CropsPageEntity> cropsPageEntityList = cropsRepository.findByTitle(croptitle);
+        if(!CollectionUtils.isEmpty(cropsPageEntityList))
+            return ResponseEntity.ok(CropsPageDTO.ConvertIntoVo(cropsPageEntityList.get(0)));
+        else
+            throw new EntityNotFoundException();
+
+    }
+
+    @Override
+    public ResponseEntity<byte[]> getCropPageImageByIdAndName(long cropid, String imageName) {
+        List<ImagesOfCropEntity> imagesOfCropEntityList = imagesOfCropRepository.findByBelongAndImagename(cropid, imageName);
+        if(CollectionUtils.isEmpty(imagesOfCropEntityList))
+            throw new EntityNotFoundException("Image not found with name: " + imageName + " id: " + cropid);
+        else if (imagesOfCropEntityList.size() > 1) {
+            throw new EntityNotFoundException("Multiple images found with same name");
+        }
+
+        ImagesOfCropEntity imagesOfCropEntity = imagesOfCropEntityList.get(0);
+        String image_name = imagesOfCropEntity.getImagename();
+        byte[] image_data = imagesOfCropEntity.getImage_data();
+
+
+        MediaType type = image_name.toLowerCase().endsWith(".png")
+                ? MediaType.IMAGE_PNG
+                : MediaType.IMAGE_JPEG;
+        return ResponseEntity.ok()
+                .contentType(type)
+                .body(image_data);
+    }
+
+    @Override
+    public ResponseEntity<byte[]> getCropPageImageByTitleAndName(String croptitle, String imageName) {
+        List<CropsPageEntity> cropsPageEntityList = cropsRepository.findByTitle(croptitle);
+        if(CollectionUtils.isEmpty(cropsPageEntityList))
+            throw new EntityNotFoundException("Crop not found with title: " + croptitle);
+        else if (cropsPageEntityList.size() > 1) {
+            throw new EntityNotFoundException("Multiple crops found with same title");
+        }
+
+        CropsPageEntity cropsPageEntity = cropsPageEntityList.get(0);
+        long cropid = cropsPageEntity.getId();
+        try{
+            return getCropPageImageByIdAndName(cropid, imageName);
+        }catch(EntityNotFoundException e){
+            throw new EntityNotFoundException(e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<byte[]> getCropPageVideosByIdAndName(long cropid, String videoName) {
+        List<VideosOfCropEntity> videosOfCropEntityList = videosOfCropRepository.findByBelongAndVideoname(cropid, videoName);
+        if(CollectionUtils.isEmpty(videosOfCropEntityList))
+            throw new EntityNotFoundException("Video not found with name: " + videoName + " id: " + cropid);
+        else if (videosOfCropEntityList.size() > 1) {
+            throw new EntityNotFoundException("Multiple videos found with same name");
+        }
+
+        VideosOfCropEntity videosOfCropEntity = videosOfCropEntityList.get(0);
+        String video_name = videosOfCropEntity.getVideoname();
+        byte[] video_data = videosOfCropEntity.getVideo_data();
+
+        String suffix = video_name.toLowerCase();
+        MediaType type = suffix.endsWith(".mp4")  ? MediaType.parseMediaType("video/mp4")
+                : suffix.endsWith(".avi") ? MediaType.parseMediaType("video/avi")
+                : suffix.endsWith(".mov") ? MediaType.parseMediaType("video/quicktime")
+                : suffix.endsWith(".mkv") ? MediaType.parseMediaType("video/x-matroska")
+                : MediaType.APPLICATION_OCTET_STREAM;
+
+        return ResponseEntity.ok().
+                contentType(type).
+                body(video_data);
+    }
+
+    @Override
+    public ResponseEntity<byte[]> getCropPageVideosByTitleAndName(String croptitle, String videoName) {
+        List<CropsPageEntity> cropsPageEntityList = cropsRepository.findByTitle(croptitle);
+        if(CollectionUtils.isEmpty(cropsPageEntityList))
+            throw new EntityNotFoundException("Crop not found with title: " + croptitle);
+        else if (cropsPageEntityList.size() > 1) {
+            throw new EntityNotFoundException("Multiple crops found with same title");
+        }
+
+        CropsPageEntity cropsPageEntity = cropsPageEntityList.get(0);
+        long cropid = cropsPageEntity.getId();
+        try {
+            return getCropPageVideosByIdAndName(cropid, videoName);
+        }catch(EntityNotFoundException e){
+            throw new EntityNotFoundException(e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<String> getCropPageDetailById(long cropid) {
+        DetailOfCropEntity detailOfCropEntity = detailsOfCropRepository.findById(cropid);
+        if(detailOfCropEntity == null)
+            throw new EntityNotFoundException("Detail not found with id: " + cropid);
+
+        return ResponseEntity.ok(detailOfCropEntity.getDetail());
+        }
+
+    @Override
+    public ResponseEntity<String> getCropPageDetailByTitle(String croptitle) {
+        long id = getIdByTitle(croptitle);
+        try{
+            return getCropPageDetailById(id);
+        }catch (EntityNotFoundException e){
+            throw new EntityNotFoundException(e.getMessage());
+        }
+    }
+
 
 }
+

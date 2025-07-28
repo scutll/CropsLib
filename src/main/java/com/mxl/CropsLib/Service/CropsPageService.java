@@ -12,6 +12,8 @@ public interface CropsPageService {
 
     ResponseEntity<String> updateCropPageTitle(long cropid, String title);
 
+    ResponseEntity<String> updateCropPageTitle(String croptitle, String title);
+
     ResponseEntity<String> updateCropPageDetail(long cropid, String details);
 
     ResponseEntity<String> updateCropPageImage(long cropid, MultipartFile image) throws Exception;
@@ -34,4 +36,14 @@ public interface CropsPageService {
     ResponseEntity<String> getCropPageDetailById(long cropid);
 
     ResponseEntity<String> getCropPageDetailByTitle(String croptitle);
+
+    ResponseEntity<String> deleteCropPageDetailById(long cropid);
+
+    ResponseEntity<String> deleteCropPageImageByIdAndName(long cropid, String imagename);
+
+    ResponseEntity<String> deleteCropPageVideoByIdAndName(long cropid, String videoname);
+
+    ResponseEntity<String> deleteCropPageImageByTitleAndName(String croptitle, String imagename);
+
+    ResponseEntity<String> deleteCropPageVideoByTitleAndName(String croptitle, String videoname);
 }

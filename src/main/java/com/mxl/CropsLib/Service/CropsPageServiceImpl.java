@@ -51,23 +51,10 @@ public class CropsPageServiceImpl implements CropsPageService{
 
     @Override
     public ResponseEntity<String> addNewCropPage(CropsPageEntity cropsPageEntity) {
-        if(cropsPageEntity.getImages() == null)
-            cropsPageEntity.setImages("");
-        if(cropsPageEntity.getVideos() == null)
-            cropsPageEntity.setVideos("");
         if(cropsPageEntity.getDetail() == null)
             cropsPageEntity.setDetail("null");
 
-        long images_cnt = cropsPageEntity.getImages()
-                .chars().filter(c -> c == ';').count();
-        cropsPageEntity.setImages_cnt((int) images_cnt);
-
-        long videos_cnt = cropsPageEntity.getVideos()
-                .chars().filter(c -> c == ';').count();
-        cropsPageEntity.setVideos_cnt((int) videos_cnt);
-
         CropsPageEntity saved = cropsRepository.save(cropsPageEntity);
-
         return ResponseEntity
                 .ok(saved.getId() + "");
     }
@@ -77,9 +64,19 @@ public class CropsPageServiceImpl implements CropsPageService{
         CropsPageEntity cropsPageInDB = cropsRepository.findById(cropid).orElseThrow(IllegalArgumentException::new);
         cropsPageInDB.setTitle(title);
 
+
         cropsRepository.save(cropsPageInDB);
         return ResponseEntity.ok("Title updated successfully: " + title);
+    }
 
+    @Override
+    public ResponseEntity<String> updateCropPageTitle(String croptitle, String title) {
+        long cropid = getIdByTitle(croptitle);
+        try{
+            return updateCropPageTitle(cropid, title);
+        }catch (IllegalArgumentException e){
+            throw new EntityNotFoundException(e.getMessage());
+        }
     }
 
     @Override
@@ -99,16 +96,9 @@ public class CropsPageServiceImpl implements CropsPageService{
     @Override
     public ResponseEntity<String> updateCropPageImage(long cropid, MultipartFile image) throws Exception{
         CropsPageEntity cropsPageInDB = cropsRepository.findById(cropid).orElseThrow(IllegalArgumentException::new);
-        String imageName = cropsPageInDB.getImages_cnt() + ".jpg";
+        String imageName = (cropsPageInDB.getImages_cnt() + 1) + ".jpg";
         cropsPageInDB.setImages_cnt(cropsPageInDB.getImages_cnt() + 1);
-        String _images = cropsPageInDB.getImages();
 
-        if(_images != null)
-            _images += imageName + ";";
-        else
-            _images = imageName + ";";
-
-        cropsPageInDB.setImages(_images);
         cropsRepository.save(cropsPageInDB);
 
         ImagesOfCropEntity imagesOfCrop = new ImagesOfCropEntity();
@@ -125,16 +115,9 @@ public class CropsPageServiceImpl implements CropsPageService{
     @Override
     public ResponseEntity<String> updateCropPageVideo(long cropid, MultipartFile video) throws Exception{
         CropsPageEntity cropsPageInDB = cropsRepository.findById(cropid).orElseThrow(IllegalArgumentException::new);
-        String videoName = cropsPageInDB.getVideos_cnt() + ".mp4";
+        String videoName = (cropsPageInDB.getVideos_cnt() + 1) + ".mp4";
         cropsPageInDB.setVideos_cnt(cropsPageInDB.getVideos_cnt() + 1);
-        String _videos = cropsPageInDB.getVideos();
 
-        if(_videos != null)
-            _videos += videoName + ";";
-        else
-            _videos = videoName + ";";
-
-        cropsPageInDB.setVideos(_videos);
         cropsRepository.save(cropsPageInDB);
 
         VideosOfCropEntity videosOfCrop = new VideosOfCropEntity();
@@ -266,6 +249,100 @@ public class CropsPageServiceImpl implements CropsPageService{
         }
     }
 
+    @Override
+    public ResponseEntity<String> deleteCropPageDetailById(long cropid) {
+        CropsPageEntity cropsPageEntity = cropsRepository.findById(cropid).orElseThrow(EntityNotFoundException::new);
+        if(cropsPageEntity.getDetail() == null && cropsPageEntity.getDetail().equals("deleted"))
+            return ResponseEntity.badRequest().body("Detail already deleted");
+        cropsPageEntity.setDetail("deleted");
+
+        DetailOfCropEntity detailOfCropEntity = detailsOfCropRepository.findById(cropid);
+        detailsOfCropRepository.delete(detailOfCropEntity);
+
+        cropsRepository.save(cropsPageEntity);
+
+        return ResponseEntity.ok("detail delete successfully");
+    }
+
+    @Override
+    public ResponseEntity<String> deleteCropPageImageByIdAndName(long cropid, String imagename) {
+        CropsPageEntity cropsPageEntity = cropsRepository.findById(cropid).orElseThrow(EntityNotFoundException::new);
+        if (imagename.equals("end"))
+            imagename = cropsPageEntity.getImages_cnt() + ".jpg";
+        System.out.println(imagename);
+        List<ImagesOfCropEntity> imagesOfCropEntityList = imagesOfCropRepository.findByBelongAndImagename(cropid, imagename);
+        if (CollectionUtils.isEmpty(imagesOfCropEntityList) || imagesOfCropEntityList.size() > 1)
+            throw new EntityNotFoundException("Image not found with name: " + imagename + " id: " + cropid);
+
+        ImagesOfCropEntity imagesOfCropEntity = imagesOfCropEntityList.get(0);
+        int deleteNum = Integer.parseInt(imagename.substring(0, imagename.lastIndexOf('.')));
+
+        imagesOfCropRepository.delete(imagesOfCropEntity);
+        cropsPageEntity.setImages_cnt(cropsPageEntity.getImages_cnt() - 1);
+        cropsRepository.save(cropsPageEntity);
+
+        List<ImagesOfCropEntity> imagesForIncrement = imagesOfCropRepository.findByBelong(cropid);
+
+        for (ImagesOfCropEntity image : imagesForIncrement) {
+            if (Integer.parseInt(image.getImagename().substring(0, image.getImagename().lastIndexOf('.'))) > deleteNum) {
+                image.setImagename((Integer.parseInt(image.getImagename().substring(0, image.getImagename().lastIndexOf('.'))) - 1) + ".jpg");
+                imagesOfCropRepository.save(image);
+            }
+        }
+
+        return ResponseEntity.ok("image delete successfully");
+    }
+
+    @Override
+    public ResponseEntity<String> deleteCropPageVideoByIdAndName(long cropid, String videoname) {
+        CropsPageEntity cropsPageEntity = cropsRepository.findById(cropid).orElseThrow(EntityNotFoundException::new);
+        if (videoname.equals("end"))
+            videoname = cropsPageEntity.getVideos_cnt() + ".mp4";
+        List<VideosOfCropEntity> videosOfCropEntityList = videosOfCropRepository.findByBelongAndVideoname(cropid, videoname);
+        if (CollectionUtils.isEmpty(videosOfCropEntityList) || videosOfCropEntityList.size() > 1)
+            throw new EntityNotFoundException("Video not found with name: " + videoname + " id: " + cropid);
+
+        VideosOfCropEntity videosOfCropEntity = videosOfCropEntityList.get(0);
+        int deleteNum = Integer.parseInt(videoname.substring(0, videoname.lastIndexOf('.')));
+
+        videosOfCropRepository.delete(videosOfCropEntity);
+        cropsPageEntity.setVideos_cnt(cropsPageEntity.getVideos_cnt() - 1);
+        cropsRepository.save(cropsPageEntity);
+
+        List<VideosOfCropEntity> videosForIncrement = videosOfCropRepository.findByBelong(cropid);
+
+        for (VideosOfCropEntity video : videosForIncrement) {
+            if (Integer.parseInt(video.getVideoname().substring(0, video.getVideoname().lastIndexOf('.'))) > deleteNum) {
+                video.setVideoname((Integer.parseInt(video.getVideoname().substring(0, video.getVideoname().lastIndexOf('.'))) - 1) + ".mp4");
+                videosOfCropRepository.save(video);
+            }
+        }
+
+        return ResponseEntity.ok("video delete successfully");
+    }
+
+    @Override
+    public ResponseEntity<String> deleteCropPageImageByTitleAndName(String croptitle, String imagename) {
+        try{
+            long id = getIdByTitle(croptitle);
+            return deleteCropPageImageByIdAndName(id, imagename);
+        }catch(EntityNotFoundException e){
+            throw new EntityNotFoundException("Crop not found with title: " + croptitle);
+        }
+    }
+
+    @Override
+    public ResponseEntity<String> deleteCropPageVideoByTitleAndName(String croptitle, String videoname) {
+        try{
+            long id = getIdByTitle(croptitle);
+            return deleteCropPageVideoByIdAndName(id, videoname);
+        }catch (EntityNotFoundException e){
+            throw new EntityNotFoundException("Crop not found with title: " + croptitle);
+        }
+    }
+
 
 }
+
+
 

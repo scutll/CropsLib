@@ -14,4 +14,6 @@ public interface ImagesOfCropRepository extends JpaRepository<ImagesOfCropEntity
     List<ImagesOfCropEntity> findByImagename(String imagename);
 
     List<ImagesOfCropEntity> findByBelongAndImagename(long belong, String imagename);
+
+    List<ImagesOfCropEntity> findByBelong(long cropid);
 }

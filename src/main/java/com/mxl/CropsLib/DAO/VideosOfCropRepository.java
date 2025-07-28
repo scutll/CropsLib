@@ -12,4 +12,6 @@ public interface VideosOfCropRepository extends JpaRepository<VideosOfCropEntity
     List<VideosOfCropEntity> findByVideoname(String videoname);
 
     List<VideosOfCropEntity> findByBelongAndVideoname(long belong, String videoname);
+
+    List<VideosOfCropEntity> findByBelong(long cropid);
 }

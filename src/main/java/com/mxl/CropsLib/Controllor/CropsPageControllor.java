@@ -113,13 +113,24 @@ public class CropsPageControllor {
 //    Put Mapping ---------------------------------------------------------------------------------------------
 
     //更新名称
-    @PutMapping("/cropslib/cropsPage/update/{cropid}/title")
+    @PutMapping("/cropslib/cropsPage/update/fromid/{cropid}/title")
     public ResponseEntity<String> updateCropPageTitle(@PathVariable long cropid,
                                                 @RequestParam("title") String title) {
         try {
             return cropsPageService.updateCropPageTitle(cropid, title);
         } catch(IllegalArgumentException e){
             return ResponseEntity.badRequest().body("cropid " + cropid + " does not exist");
+        }
+    }
+
+    @PutMapping("/cropslib/cropsPage/update/fromtitle/{croptitle}/title")
+    public ResponseEntity<String> updateCropPageTitle(@PathVariable String croptitle,
+                                                @RequestParam("title") String title) {
+        String croptOldtTitle = croptitle;
+        try{
+            return cropsPageService.updateCropPageTitle(croptOldtTitle, title);
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().body("croptitle " + croptOldtTitle + " does not exist");
         }
     }
 
@@ -154,7 +165,63 @@ public class CropsPageControllor {
 
 
 
-
-
 //    Delete Mapping ---------------------------------------------------------------------------------------------
+    @DeleteMapping("/cropslib/cropsPage/delete/detail/fromid/{cropid}")
+    public ResponseEntity<String> deleteCropPageDetailById(@PathVariable long cropid) {
+        try {
+            return cropsPageService.deleteCropPageDetailById(cropid);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+//   若imagename == end 或数字.jpg 则默认删除最后一张图片
+    @DeleteMapping("/cropslib/cropsPage/delete/image/fromid/{cropid}/imagename/{imagename}")
+    public ResponseEntity<String> deleteCropPageImageByIdAndName(@PathVariable long cropid,
+                                                                 @PathVariable String imagename) {
+        try {
+            return cropsPageService.deleteCropPageImageByIdAndName(cropid, imagename);
+        }catch(EntityNotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/cropslib/cropsPage/delete/image/fromtitle/{croptitle}/imagename/{imagename}")
+    public ResponseEntity<String> deleteCropPageImageByTitleAndName(@PathVariable String croptitle,
+                                                                    @PathVariable String imagename) {
+        try {
+            return cropsPageService.deleteCropPageImageByTitleAndName(croptitle, imagename);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+
+    //   若videoname == end 或数字.mp4 则默认删除最后一个视频
+    @DeleteMapping("/cropslib/cropsPage/delete/video/fromid/{cropid}/videoname/{videoname}")
+    public ResponseEntity<String> deleteCropPageVideoByIdAndName(@PathVariable long cropid,
+                                                                 @PathVariable String videoname) {
+        try {
+            return cropsPageService.deleteCropPageVideoByIdAndName(cropid, videoname);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/cropslib/cropsPage/delete/video/fromtitle/{croptitle}/videoname/{videoname}")
+    public ResponseEntity<String> deleteCropPageVideoByTitleAndName(@PathVariable String croptitle,
+                                                                    @PathVariable String videoname){
+        try{
+            return cropsPageService.deleteCropPageVideoByTitleAndName(croptitle, videoname);
+        }catch(EntityNotFoundException e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
 }
+
+
+
+

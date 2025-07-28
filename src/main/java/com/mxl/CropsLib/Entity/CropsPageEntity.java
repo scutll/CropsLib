@@ -17,14 +17,8 @@ public class CropsPageEntity {
     @Column(name = "detail")
     private String detail;
 
-    @Column(name = "images")
-    private String images;
-
     @Column(name = "images_cnt")
     private int images_cnt;
-
-    @Column(name = "videos")
-    private String videos;
 
     @Column(name = "videos_cnt")
     private int videos_cnt;
@@ -54,22 +48,6 @@ public class CropsPageEntity {
 
     public void setDetail(String detail) {
         this.detail = detail;
-    }
-
-    public String getImages() {
-        return images;
-    }
-
-    public void setImages(String images) {
-        this.images = images;
-    }
-
-    public String getVideos() {
-        return videos;
-    }
-
-    public void setVideos(String videos) {
-        this.videos = videos;
     }
 
     public int getImages_cnt() {

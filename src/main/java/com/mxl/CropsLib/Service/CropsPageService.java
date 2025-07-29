@@ -6,6 +6,8 @@ import com.mxl.CropsLib.Vo.CropsPageDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 public interface CropsPageService {
     ResponseEntity<String> addNewCropPage(CropsPageEntity cropsPageEntity);
 
@@ -46,4 +48,6 @@ public interface CropsPageService {
     ResponseEntity<String> deleteCropPageImageByTitleAndName(String croptitle, String imagename);
 
     ResponseEntity<String> deleteCropPageVideoByTitleAndName(String croptitle, String videoname);
+
+    ResponseEntity<String> addCropPageImagesById(long cropid, MultipartFile[] images, MultipartFile orderJson) throws IOException;
 }

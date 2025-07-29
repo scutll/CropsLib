@@ -12,6 +12,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 @Controller
 public class CropsPageControllor {
 
@@ -105,6 +107,24 @@ public class CropsPageControllor {
     @PostMapping("/cropslib/cropsPage/add")
     public ResponseEntity<String> addNewCropPage(@RequestBody CropsPageEntity cropsPageEntity){
         return cropsPageService.addNewCropPage(cropsPageEntity);
+    }
+
+    //批量添加图片
+    @PostMapping("/cropslib/cropsPage/add/MultipleImages")
+    public ResponseEntity<String> addCropPageImagesById(@RequestParam("cropid") long cropid,
+                                                        @RequestParam("images") MultipartFile[] images,
+                                                        @RequestParam("orderJson") MultipartFile orderJson) {
+        System.out.println(cropid);
+        System.out.println(images.length);
+        try{
+            return cropsPageService.addCropPageImagesById(cropid, images, orderJson);
+        }catch(IllegalArgumentException e){
+            return ResponseEntity.badRequest().body("broken image found: " + e);
+        }catch(EntityNotFoundException e) {
+            return ResponseEntity.badRequest().body("cropid " + cropid + " does not exist");
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 

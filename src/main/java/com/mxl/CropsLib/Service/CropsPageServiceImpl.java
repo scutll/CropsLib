@@ -1,6 +1,8 @@
 package com.mxl.CropsLib.Service;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mxl.CropsLib.DAO.CropsRepository;
 import com.mxl.CropsLib.DAO.DetailsOfCropRepository;
 import com.mxl.CropsLib.DAO.ImagesOfCropRepository;
@@ -19,7 +21,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.w3c.dom.stylesheets.LinkStyle;
 
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CropsPageServiceImpl implements CropsPageService{
@@ -339,6 +343,49 @@ public class CropsPageServiceImpl implements CropsPageService{
         }catch (EntityNotFoundException e){
             throw new EntityNotFoundException("Crop not found with title: " + croptitle);
         }
+    }
+
+    @Override
+    public ResponseEntity<String> addCropPageImagesById(long cropid, MultipartFile[] images, MultipartFile orderJson) throws IOException {
+
+        if(!cropsRepository.existsById(cropid))
+            throw new EntityNotFoundException("Crop not found with id: " + cropid);
+
+        Map<String, Integer> orderMap = new ObjectMapper()
+                .readValue(orderJson.getInputStream(), new TypeReference<Map<String, Integer>>() {});
+
+        Map<String, MultipartFile> imageMap = Arrays.stream(images)
+                .collect(Collectors.toMap(
+                        MultipartFile::getOriginalFilename,
+                        f -> f,
+                        (f1, f2) -> f1)
+                );
+
+        List<MultipartFile> orderedImages = orderMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .map(imageMap::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+
+        CropsPageEntity cropsPageInDB = cropsRepository.findById(cropid).orElseThrow(EntityNotFoundException::new);
+        for(MultipartFile image: orderedImages){
+            try{
+//                updateCropPageImage(cropid, image);
+//                //问题出在多个图片进行上传时创建多个相同id的Entity,并进行images_cnt的修改，这是不被允许的
+                ImagesOfCropEntity imageOfCropEntity = new ImagesOfCropEntity();
+                imageOfCropEntity.setBelong(cropid);
+                imageOfCropEntity.setImagename((cropsPageInDB.getImages_cnt() + 1) + ".jpg");
+                imageOfCropEntity.setImage_data(image.getBytes());
+                imagesOfCropRepository.save(imageOfCropEntity);
+                cropsPageInDB.setImages_cnt(cropsPageInDB.getImages_cnt() + 1);
+                cropsRepository.save(cropsPageInDB);
+            }catch (Exception e){
+                throw new RuntimeException("Error occurred while adding image: " + image.getOriginalFilename(), e);
+            }
+        }
+            return ResponseEntity.ok("All images updated successfully");
     }
 
 
